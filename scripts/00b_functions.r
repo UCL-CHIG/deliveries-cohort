@@ -1,0 +1,206 @@
+
+print("Loading functions")
+
+mode_fun <- function(x) {
+  v <- x[!is.na(x)]
+  ux <- unique(v)
+  tab <- tabulate(match(v, ux))
+  md <- ux[tab == max(tab)]
+  if (length(md) == 1) {
+    return(md)
+  } else {
+    return(md[which(rmultinom(1, 1, rep(1/length(md), length(md))) == 1)])
+  }
+}
+
+clean_hes_dates <- function(hes_source) {
+  
+  print("NA values")
+  hes_source[epistart == "", epistart := NA]
+  hes_source[epiend == "", epiend := NA]
+  hes_source[admidate == "", admidate := NA]
+  hes_source[disdate == "", disdate := NA]
+  
+  hes_source[, epistart := as.Date(epistart, format = "%Y-%m-%d")]
+  hes_source[, epiend := as.Date(epiend, format = "%Y-%m-%d")]
+  hes_source[, admidate := as.Date(admidate, format = "%Y-%m-%d")]
+  hes_source[, disdate := as.Date(disdate, format = "%Y-%m-%d")]
+  
+  hes_source[epistart <= as.Date("1801-01-01"), epistart := NA]
+  hes_source[epiend <= as.Date("1801-01-01"), epiend := NA]
+  hes_source[admidate <= as.Date("1801-01-01"), admidate := NA]
+  hes_source[disdate <= as.Date("1801-01-01"), disdate := NA]
+  
+  print("Drop episodes with completely missing dates")
+  # table(is.na(hes_source$admidate) & !is.na(hes_source$epistart)) # small n and all unknown admimeth - drop
+  hes_source <- hes_source[!is.na(epistart) & !is.na(admidate)]
+  
+  # View(hes_source[tokenid %in% hes_source[is.na(epiend)]$tokenid])
+  # largely seems to be empty or duplicate info - drop
+  hes_source <- hes_source[!is.na(epiend)]
+  
+  
+  print("Infer missing values")
+  # table(is.na(hes_source$admidate) & !is.na(hes_source$epistart))
+  hes_source[is.na(admidate), admidate := epistart]
+  
+  # table(is.na(hes_source$epiend) & !is.na(hes_source$disdate))
+  hes_source[is.na(epiend) & !is.na(disdate), epiend := disdate]
+
+  # table(is.na(hes_source$disdate))
+  hes_source[is.na(disdate), disdate := epiend]
+  
+  print("Reverse dates that need reversing")
+  # table(hes_source[!is.na(disdate)]$admidate > hes_source[!is.na(disdate)]$disdate)
+  # they need to be turned around
+  hes_source[, admidate_tmp := admidate]
+  hes_source[, disdate_tmp := disdate]
+  hes_source[, epistart_tmp := epistart]
+  hes_source[, epiend_tmp := epiend]
+  
+  hes_source[admidate_tmp > disdate_tmp & !is.na(disdate), epiend := epistart_tmp]
+  hes_source[admidate_tmp > disdate_tmp & !is.na(disdate), epistart := epiend_tmp]
+  hes_source[admidate_tmp > disdate_tmp & !is.na(disdate), admidate := disdate_tmp]
+  hes_source[admidate_tmp > disdate_tmp & !is.na(disdate), disdate := admidate_tmp]
+  
+  hes_source[, admidate_tmp := NULL]
+  hes_source[, disdate_tmp := NULL]
+  hes_source[, epistart_tmp := NULL]
+  hes_source[, epiend_tmp := NULL]
+  
+  # table(hes_source$epistart > hes_source$epiend)
+  # View(hes_source[epistart > epiend, c("tokenid", "admidate", "epistart", "disdate", "epiend")])
+  hes_source[, flag := epistart > epiend]
+  hes_source[flag == T, epistart := admidate]
+  hes_source[flag == T, epiend := disdate]
+  hes_source[, flag := NULL]
+  
+  print("Create max_disdate")
+  # Create max disdate
+  hes_source[, disdate := max(disdate, na.rm = T), by = .(tokenid, admidate)]
+  # hes_source[, max_epiend := max(epiend, na.rm = T), by = .(tokenid, admidate)]
+  # hes_source[is.na(max_disdate), max_disdate := max_epiend]
+  
+  return(hes_source)
+  
+}
+
+
+
+join_spells <- function(hes_source) {
+  
+  print("Joining spells tegether")
+  hes_source <- hes_source[order(tokenid, admidate, disdate, epistart, epiend)]
+  hes_source <- hes_source[!duplicated(hes_source)]
+  
+  hes_source[, epi_n := seq_len(.N), by = rleid(tokenid)]
+  hes_source[, admi_n := frank(admidate, ties.method = "dense"), by = tokenid]
+  
+  flags <- hes_source$disdate >= shift(hes_source$admidate, type = "lead")
+  flags[hes_source$tokenid != shift(hes_source$tokenid, type = "lead")] <- F
+  flags[hes_source$admi_n == shift(hes_source$admi_n, type = "lead")] <- F
+  hes_source[, dis_flag := flags]
+  rm(flags)
+  table(hes_source$dis_flag)
+  
+  ids_flagged <- unique(hes_source[dis_flag == T]$tokenid)
+  ids <- hes_source$tokenid
+  admidate <- hes_source$admidate
+  disdate <- hes_source$disdate
+  tablen <- max(table(ids, hes_source$dis_flag)[, 2]) + 1
+  
+  max_spellend <- as.Date(rep(NA, length(ids)))
+  
+  date_cond <- disdate >= shift(admidate, type = "lead")
+  id_cond_1 <- ids %in% ids_flagged
+  id_cond_2 <- ids == shift(ids, type = "lead")
+  
+  
+  print("Looping...")
+  pb <- txtProgressBar(min = 1, max = length(ids) - 1, style = 3)
+  
+  for (i in 1:(length(ids) - 1)) {
+    if (id_cond_1[i]) {
+      if (id_cond_2[i]) {
+        index_disdate <- rep(as.Date("1800-01-01"), tablen)
+        if (date_cond[i]) {
+          j <- i
+          k <- i
+          n <- 1
+          while (disdate[j] >= (admidate[j + 1]) & ids[j] == ids[j + 1]) {
+            index_disdate[n] <- disdate[j]
+            j <- j + 1
+            n <- n + 1
+          }
+          index_disdate[n] <- disdate[j]
+          max_spellend[k:(k+n-1)] <- max(index_disdate)
+        }
+      }
+    }
+    setTxtProgressBar(pb, i)
+  }
+  
+  hes_source$spell_end <- max_spellend
+  
+  hes_source[is.na(spell_end), spell_end := disdate]
+  hes_source[, dis_flag := NULL]
+  
+  hes_source[, spell_start := min(admidate), by = .(tokenid, spell_end)]
+  hes_source[spell_end < epiend, spell_end := epiend]
+  hes_source[, spell_end := max(spell_end), by = .(tokenid, spell_start)]
+  
+  return(hes_source)
+  
+}
+
+
+id_diag_in_window <- function(diag_dt, deliveries_processed, grps, prefix, years) {
+  
+  print("Looping through deliveries")
+  for (i in 1:max_del) {
+    print(paste0("Delivery ", i))
+    del_col <- paste0("del_", i)
+    for (grp in grps) {
+      new_col <- paste0(prefix, "_", grp, "_", years, "yr_prior_del_", i)
+      diag_dt[!is.na(get(del_col)), (new_col) := epistart >= get(del_col) - 365 * years & epistart <= get(del_col) & get(grp) == T]
+    }
+  }
+  
+  
+  print("Converting to long and merging")
+  
+  dt_list_tmp <- list()
+  
+  for (i in 1:length(grps)) {
+    
+    print(grps[i])
+    dt_list_tmp[[i]] <- diag_dt[, c("tokenid", names(diag_dt)[grepl(paste0(prefix, "_", grps[i], "_"), names(diag_dt))]), with = F]
+    dt_list_tmp[[i]] <- dt_list_tmp[[i]][!duplicated(dt_list_tmp[[i]])]
+    
+    dt_list_tmp[[i]] <-
+      melt(
+        dt_list_tmp[[i]],
+        id.vars = "tokenid",
+        variable.name = "delivery_n",
+        value.name = paste0(prefix, "_", grps[i], "_", years, "yrs_prior_del")
+      )
+    
+    dt_list_tmp[[i]] <- dt_list_tmp[[i]][get(paste0(prefix, "_", grps[i], "_", years, "yrs_prior_del")) == T]
+    dt_list_tmp[[i]][, delivery_n := as.integer(gsub("[^0-9]+|3yr", "", delivery_n))]
+    dt_list_tmp[[i]] <- dt_list_tmp[[i]][!duplicated(dt_list_tmp[[i]])]
+    
+    deliveries_processed <-
+      merge(
+        deliveries_processed,
+        dt_list_tmp[[i]],
+        by = c("tokenid", "delivery_n"),
+        all.x = T
+      )
+    
+    deliveries_processed[is.na(get(paste0(prefix, "_", grps[i], "_", years, "yrs_prior_del"))), paste0(prefix, "_", grps[i], "_", years, "yrs_prior_del") := F]
+    
+  }
+  
+  return(deliveries_processed)
+  
+}

@@ -1,0 +1,56 @@
+code,dataset,field,code_type,description,group
+F70,hes_apc,diag,icd10,mild mental retardation,intellectual_disability
+F71,hes_apc,diag,icd10,moderate mental retardation,intellectual_disability
+F72,hes_apc,diag,icd10,severe mental retardation,intellectual_disability
+F73,hes_apc,diag,icd10,profound mental retardation,intellectual_disability
+F78,hes_apc,diag,icd10,other mental retardation,intellectual_disability
+F79,hes_apc,diag,icd10,unspecified mental retardation,intellectual_disability
+F81.9,hes_apc,diag,icd10,developmental disorder of scholastic skills unspecified,developmental_disorder_scholastic_skills
+D82.1,hes_apc,diag,icd10,di george syndrome,specific_disorders_associated
+E00.0,hes_apc,diag,icd10,congenital iodine-deficiency syndrome neurological type,specific_disorders_associated
+E00.1,hes_apc,diag,icd10,congenital iodine-deficiency syndrome myxoedematous type,specific_disorders_associated
+E00.2,hes_apc,diag,icd10,congenital iodine-deficiency syndrome mixed type,specific_disorders_associated
+E00.9,hes_apc,diag,icd10,congenital iodine-deficiency syndrome unspecified,specific_disorders_associated
+E70.0,hes_apc,diag,icd10,classical phenylketonuria,specific_disorders_associated
+E77.1,hes_apc,diag,icd10,defects in glycoprotein degradation,specific_disorders_associated
+E77.8,hes_apc,diag,icd10,other disorders of glycoprotein metabolism,specific_disorders_associated
+E79.1,hes_apc,diag,icd10,lesch-nyhan syndrome,specific_disorders_associated
+E79.8,hes_apc,diag,icd10,other disorders of purine and pyrimidine metabolism,specific_disorders_associated
+F83,hes_apc,diag,icd10,mixed specific developmental disorders,specific_disorders_associated
+F84.2,hes_apc,diag,icd10,rett syndrome,specific_disorders_associated
+F84.3,hes_apc,diag,icd10,other childhood disintegrative disorder,specific_disorders_associated
+F84.4,hes_apc,diag,icd10,overactive disorder associated with mental retardation and stereotyped movements,specific_disorders_associated
+F84.8,hes_apc,diag,icd10,other pervasive developmental disorders,specific_disorders_associated
+F84.9,hes_apc,diag,icd10,pervasive developmental disorder unspecified,specific_disorders_associated
+Q00,hes_apc,diag,icd10,anencephaly and similar malformations,specific_disorders_associated
+Q00.0,hes_apc,diag,icd10,anencephaly,specific_disorders_associated
+Q00.1,hes_apc,diag,icd10,craniorachischisis,specific_disorders_associated
+Q00.2,hes_apc,diag,icd10,iniencephaly,specific_disorders_associated
+Q04.1,hes_apc,diag,icd10,arhinencephaly,specific_disorders_associated
+Q04.2,hes_apc,diag,icd10,holoprosencephaly,specific_disorders_associated
+Q04.3,hes_apc,diag,icd10,other reduction deformities of brain,specific_disorders_associated
+Q04.8,hes_apc,diag,icd10,other specified congenital malformations of brain,specific_disorders_associated
+Q85.1,hes_apc,diag,icd10,tuberous sclerosis,specific_disorders_associated
+Q87.8,hes_apc,diag,icd10,other specified congenital malformation syndromes not elsewhere classified,specific_disorders_associated
+Q90,hes_apc,diag,icd10,down syndrome,specific_disorders_associated
+Q90.0,hes_apc,diag,icd10,trisomy 21 meiotic nondisjunction,specific_disorders_associated
+Q90.2,hes_apc,diag,icd10,trisomy 21 translocation,specific_disorders_associated
+Q90.9,hes_apc,diag,icd10,down syndrome unspecified,specific_disorders_associated
+Q91,hes_apc,diag,icd10,edwards' syndrome and patau syndrome,specific_disorders_associated
+Q91.0,hes_apc,diag,icd10,trisomy 18 meiotic nondisjunction,specific_disorders_associated
+Q91.1,hes_apc,diag,icd10,trisomy 18 mosaicism (mitotic nondisjunction),specific_disorders_associated
+Q91.2,hes_apc,diag,icd10,trisomy 18 translocation,specific_disorders_associated
+Q91.3,hes_apc,diag,icd10,edwards' syndrome unspecified,specific_disorders_associated
+Q91.4,hes_apc,diag,icd10,trisomy 13 meiotic nondisjunction,specific_disorders_associated
+Q91.5,hes_apc,diag,icd10,trisomy 13 mosaicism (mitotic nondisjunction),specific_disorders_associated
+Q91.6,hes_apc,diag,icd10,trisomy 13 translocation,specific_disorders_associated
+Q91.7,hes_apc,diag,icd10,patau syndrome unspecified,specific_disorders_associated
+Q92,hes_apc,diag,icd10,other trisomies and partial trisomies of the autosomes not elsewhere classified,specific_disorders_associated
+Q92.0,hes_apc,diag,icd10,whole chromosome trisomy meiotic nondisjunction,specific_disorders_associated
+Q92.1,hes_apc,diag,icd10,whole chromosome trisomy mosaicism (mitotic nondisjunction),specific_disorders_associated
+Q92.2,hes_apc,diag,icd10,major partial trisomy,specific_disorders_associated
+Q92.3,hes_apc,diag,icd10,minor partial trisomy,specific_disorders_associated
+Q92.7,hes_apc,diag,icd10,triploidy and polyploidy,specific_disorders_associated
+Q93.3,hes_apc,diag,icd10,deletion of short arm of chromosome 4,specific_disorders_associated
+Q93.4,hes_apc,diag,icd10,deletion of short arm of chromosome 5,specific_disorders_associated
+Q99.2,hes_apc,diag,icd10,fragile x chromosome,specific_disorders_associated

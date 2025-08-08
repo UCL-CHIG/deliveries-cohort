@@ -1,0 +1,4 @@
+code,dataset,field,code_type
+O60.1,hes_apc,diag,icd10
+P07.2,hes_apc,diag,icd10
+P07.3,hes_apc,diag,icd10
