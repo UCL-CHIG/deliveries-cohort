@@ -25,7 +25,7 @@ ons_mort_data <-
     )
   )
 
-dbDisconnect(sql_channel)
+# dbDisconnect(sql_channel)
 
 ons_mort_data <- ons_mort_data[tokenid %in% deliveries_processed$tokenid]
 setnames(ons_mort_data, "subsequent_activity", "hes_activity_after_dod")
@@ -75,3 +75,4 @@ rm(apc_latest, apc_mortality, ons_mort_data)
 
 print("Saving")
 save(deliveries_processed, file = "processed/tmp_deliveries_12.rda")
+

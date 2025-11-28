@@ -34,8 +34,9 @@ get_hes_data <- function(financial_years_starting) {
         dbGetQuery(
           sql_channel,
           paste0(
-            "SELECT tokenid, epikey, ",
-            "rescty, resgor, resha, resladst, resro ",
+            "SELECT tokenid, epikey, epistart, ",
+            "rescty, resgor, resha, resladst, resro, ",
+            "imd04ic, imd04_decile_cat ",
             "FROM ", table_name, " ",
             "WHERE sex = 2 and startage > 11 and startage < 51"
           )
@@ -65,13 +66,74 @@ sql_channel <-
     dbname = "[omitted]"
   )
 
-geo_data <- get_hes_data(1997:2022)
-geo_data <- geo_data[epikey %in% deliveries_processed$epikey]
+geo_data <- get_hes_data(1997:2005)
+geo_data <- geo_data[tokenid %in% deliveries_processed$tokenid]
+
+print("Re-establishing SQL server connection")
+sql_channel <-
+  dbConnect(
+    RMySQL::MySQL(),
+    username = "[omitted]",
+    password = .rs.askForPassword("log in CPRU SQL server"),
+    host = "[omitted]",
+    port = omitted,
+    dbname = "[omitted]"
+  )
+
+geo_data2 <- get_hes_data(2006:2011)
+geo_data2 <- geo_data2[tokenid %in% deliveries_processed$tokenid]
+
+print("Re-establishing SQL server connection")
+sql_channel <-
+  dbConnect(
+    RMySQL::MySQL(),
+    username = "[omitted]",
+    password = .rs.askForPassword("log in CPRU SQL server"),
+    host = "[omitted]",
+    port = omitted,
+    dbname = "[omitted]"
+  )
+
+geo_data3 <- get_hes_data(2012:2016)
+geo_data3 <- geo_data3[tokenid %in% deliveries_processed$tokenid]
+
+print("Re-establishing SQL server connection")
+sql_channel <-
+  dbConnect(
+    RMySQL::MySQL(),
+    username = "[omitted]",
+    password = .rs.askForPassword("log in CPRU SQL server"),
+    host = "[omitted]",
+    port = omitted,
+    dbname = "[omitted]"
+  )
+
+geo_data4 <- get_hes_data(2017:2022)
+geo_data4 <- geo_data4[tokenid %in% deliveries_processed$tokenid]
+
+geo_data <- rbind(geo_data, geo_data2, geo_data3, geo_data4)
+rm(geo_data2, geo_data3, geo_data4)
+
 dbDisconnect(sql_channel)
+save(geo_data, file = "processed/tmp_geo_data.rda")
 
 
-print("Processing")
+print("Merging IMD")
+geo_data_imd <- geo_data[, c("epikey", "imd04ic", "imd04_decile_cat")]
 
+deliveries_processed <-
+  merge(
+    deliveries_processed,
+    geo_data_imd,
+    by = "epikey",
+    all.x = T
+  )
+
+rm(geo_data_imd)
+geo_data <- geo_data[, -c("imd04ic", "imd04_decile_cat")]
+
+
+print("Processing geography variables")
 geo_data <- geo_data[!(is.na(rescty) & is.na(resgor) & is.na(resha) & is.na(resladst) & is.na(resro))]
 
 geo_data[, rescty := toupper(rescty)]
@@ -90,21 +152,26 @@ geo_data[, not_england :=
            resladst %in% non_england_codes |
            resro %in% non_england_codes]
 
-geo_data <- geo_data[, -c("tokenid")]
+geo_data_compressed <- geo_data[, c("tokenid", "epikey", "epistart", "not_england")]
+geo_data_compressed <- geo_data_compressed[not_england == T]
 
 
-print("Merging")
+print("Identifying relevant non-England episodes")
+deliveries_processed[, not_england_at_this_birth := epikey %in% geo_data_compressed$epikey]
+deliveries_processed[, not_england_at_any_birth := as.logical(max(not_england_at_this_birth)), by = .(tokenid)]
+rm(geo_data_compressed, non_england_codes)
+
+
+print("Merging region variables")
 deliveries_processed <-
   merge(
     deliveries_processed,
-    geo_data,
+    geo_data[, c("epikey", "rescty", "resgor", "resha", "resladst", "resro")],
     by = "epikey",
     all.x = T
   )
 
-rm(geo_data, non_england_codes)
-
-deliveries_processed[is.na(not_england), not_england := F]
+rm(geo_data)
 
 
 print("Saving")

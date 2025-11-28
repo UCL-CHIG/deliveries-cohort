@@ -13,7 +13,7 @@ load("processed/deliveries_with_unassigned_episodes.rda")
 
 deliveries_processed[, exclude :=
                        startage < 15 |
-                       not_england == T |
+                       not_england_at_any_birth == T |
                        (!is.na(dod_combined) & dod_combined < delivery_date) |
                        !is.na(hes_activity_after_dod) |
                        delivery_date - epistart > 100 |
@@ -23,6 +23,6 @@ deliveries_processed[, exclude :=
 
 rm(deliveries_with_unassigned_episodes)
 
-deliveries_processed <- deliveries_processed[exclude == F]
+# deliveries_processed <- deliveries_processed[exclude == F]
 
 save(deliveries_processed, file = "processed/tmp_deliveries_14.rda")

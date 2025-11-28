@@ -12,6 +12,8 @@ new_order <-
     "dob_full",
     "startage",
     "ethnos",
+    "imd04_decile_cat",
+    "imd04ic",
     "rescty",
     "resgor",
     "resha",
@@ -33,17 +35,20 @@ new_order <-
     "dod_apc",
     "dod_combined",
     names(deliveries_processed)[grepl("cause_of_death", names(deliveries_processed))],
-    tmp)
+    tmp,
+    "not_england_at_this_birth",
+    "not_england_at_any_birth",
+    "hes_activity_after_dod",
+    "abortion",
+    "exclude")
 
 remaining_vars <-
   names(deliveries_processed)[!(names(deliveries_processed) %in% new_order)]
 
 remaining_vars <-
-  remaining_vars[!(remaining_vars %in% c("abortion",
-                                         "hes_activity_after_dod",
-                                         "not_england",
-                                         "exclude",
-                                         "min_epistart",
+  remaining_vars[!(remaining_vars %in% c("min_epistart",
+                                         "not_england_at_any_birth",
+                                         "not_england_at_this_birth",
                                          "epistart_fyear_starting",
                                          "matage",
                                          "epistat",

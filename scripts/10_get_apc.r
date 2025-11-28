@@ -1,6 +1,17 @@
 
 get_hes_data <- function(financial_years_starting) {
   
+  print("Re-establishing SQL server connection")
+  sql_channel <-
+    dbConnect(
+      RMySQL::MySQL(),
+      username = "[omitted]",
+      password = .rs.askForPassword("log in CPRU SQL server"),
+      host = "[omitted]",
+      port = omitted,
+      dbname = "[omitted]"
+    )
+  
   tables <- dbListTables(sql_channel)
   tables <- tables[grepl("APC_[0-9]{4}$", tables)]
   
@@ -21,13 +32,14 @@ get_hes_data <- function(financial_years_starting) {
   
   tables <- tables[match(years, substr(tables, 5, 9))]
   
-  hes_source <- data.table()
+  # hes_source <- data.table()
+  hes_source <- list()
   
-  for (table_name in tables) {
+  for (i in 1:length(tables)) {
     
-    print(paste0("Now doing table: ", table_name))
+    print(paste0("Now doing table: ", tables[i]))
     
-    temp <-
+    hes_source[[i]] <-
       data.table(
         dbGetQuery(
           sql_channel,
@@ -37,36 +49,47 @@ get_hes_data <- function(financial_years_starting) {
             "admimeth, dismeth, disdest, ",
             paste0("diag_", sprintf("%02d", 1:20), collapse = ", "), ", ",
             paste0("opertn_", sprintf("%02d", 1:24), collapse = ", "), " ",
-            "FROM ", table_name, " ",
+            "FROM ", tables[i], " ",
             "WHERE sex = 2 and startage > 11 and startage < 80"
           )
         )
       )
     
-    #temp <- temp[tokenid %in% deliveries_processed$tokenid]
-    hes_source <- rbind(hes_source, temp)
+    # temp <- temp[tokenid %in% deliveries_processed$tokenid]
+    # hes_source <- rbind(hes_source, temp)
     
   }
   
+  hes_source <- do.call("rbind", hes_source)
   return(hes_source)
   
 }
 
 print("Extracting APC record")
+apc <- get_hes_data(1997:2002)
 
-print("Re-establishing SQL server connection")
-sql_channel <-
-  dbConnect(
-    RMySQL::MySQL(),
-    username = "[omitted]",
-    password = .rs.askForPassword("log in CPRU SQL server"),
-    host = "[omitted]",
-    port = omitted,
-    dbname = "[omitted]"
-  )
+apc_tmp <- get_hes_data(2003:2006)
+apc <- rbind(apc, apc_tmp)
 
-apc <- get_hes_data(1997:2022)
+apc_tmp <- get_hes_data(2007:2010)
+apc <- rbind(apc, apc_tmp)
+
+apc_tmp <- get_hes_data(2011:2014)
+apc <- rbind(apc, apc_tmp)
+
+apc_tmp <- get_hes_data(2015:2018)
+apc <- rbind(apc, apc_tmp)
+
+apc_tmp <- get_hes_data(2019:2022)
+apc <- rbind(apc, apc_tmp)
+
+
+dbDisconnect(sql_channel)
+
 apc <- apc[tokenid %in% deliveries_processed$tokenid]
+
+print("Saving tmp")
+save(apc, file = "processed/tmp_apc_unprocessed.rda")
 
 
 print("Cleaning dates and deduplicating")
